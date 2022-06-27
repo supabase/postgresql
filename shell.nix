@@ -1,3 +1,4 @@
+# TODO caching for CI
 with import (builtins.fetchTarball {
   name = "2021-09-29";
   url = "https://github.com/NixOS/nixpkgs/archive/76b1e16c6659ccef7187ca69b287525fea133244.tar.gz";
@@ -9,23 +10,13 @@ let
   styleScript = writeShellScriptBin "${prefix}-style" ''
     set -euo pipefail
 
-    # will only work when using a different branch than master for development
     echo 'Running pgindent on changed files...'
     changed=$(${git}/bin/git diff-index --name-only HEAD -- '*.c')
     for x in $changed; do
       ./src/tools/pgindent/pgindent $x
     done
 
-    # not producing reliable output yet
-    # echo 'Running pgperltidy...'
-    # ./src/tools/pgindent/pgperltidy
-  '';
-  checkStyleScript = writeShellScriptBin "${prefix}-check-style" ''
-    set -euo pipefail
-
-    ${styleScript}/bin/${prefix}-style
-
-    ${git}/bin/git diff-index --exit-code HEAD -- '*.pl' '*.c'
+    ./src/tools/pgindent/pgperltidy
   '';
   buildScript = writeShellScriptBin "${prefix}-build" ''
     set -euo pipefail
@@ -41,16 +32,16 @@ let
 in
 mkShell {
   buildInputs = [
-    readline zlib bison flex ctags ccache git
+    readline zlib bison flex ctags ccache git bash
     (callPackage ./nix/PerlTidy.nix {})
     (callPackage ./nix/pg_bsd_ident.nix {})
-    (callPackage ./nix/pgScript.nix {inherit pgBuildDir;})
+    (callPackage ./nix/pgScript.nix {inherit prefix pgBuildDir;})
     styleScript
-    checkStyleScript
     buildScript
     cleanScript
   ];
   shellHook = ''
     export HISTFILE=.history
+    export OUR_SHELL="${bash}/bin/bash"
   '';
 }

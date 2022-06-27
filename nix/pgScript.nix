@@ -1,5 +1,5 @@
 # Starts a fast pg
-{ writeShellScriptBin, pgBuildDir } :
+{ writeShellScriptBin, prefix, pgBuildDir } :
 
 let
   script = ''
@@ -23,4 +23,4 @@ let
     "$@"
   '';
 in
-writeShellScriptBin "with-pg" script
+writeShellScriptBin "${prefix}-with" script

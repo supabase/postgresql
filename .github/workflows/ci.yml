@@ -21,4 +21,4 @@ jobs:
         run: nix-shell --run "pg-build"
 
       - name: Run tests
-        run: nix-shell --run "with-pg make installcheck-parallel"
+        run: nix-shell --run "pg-with make installcheck-parallel"
