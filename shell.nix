@@ -29,6 +29,12 @@ let
   cleanScript = writeShellScriptBin "${prefix}-clean" ''
     rm -rf ${pgBuildDir}
   '';
+  testModuleScript = writeShellScriptBin "${prefix}-test-module" ''
+    set -euo pipefail
+
+    cd src/test/modules/$1
+    make check
+  '';
 in
 mkShell {
   buildInputs = [
@@ -39,6 +45,7 @@ mkShell {
     styleScript
     buildScript
     cleanScript
+    testModuleScript
   ];
   shellHook = ''
     export HISTFILE=.history

@@ -39,6 +39,9 @@ You can run the tests with:
 
 ```bash
 $ pg-with make installcheck-parallel
+
+# world tests(slower)
+$ pg-with make installcheck-world
 ```
 
 ### Styling

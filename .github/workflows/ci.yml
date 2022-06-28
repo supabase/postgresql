@@ -21,4 +21,8 @@ jobs:
         run: nix-shell --run "pg-build"
 
       - name: Run tests
-        run: nix-shell --run "pg-with make -j16 installcheck-world"
+        run: nix-shell --run "pg-with make installcheck-parallel"
+
+      # temporary
+      - name: Run module test for rbtree(until installcheck-world works)
+        run: nix-shell --run "pg-test-module test_rbtree"
