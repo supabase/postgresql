@@ -279,6 +279,57 @@ testfind(int size)
 }
 
 /*
+ * Check the correctness of the rbt_find_great_equal operation by searching for
+ * an equal key and all of the greater keys.
+ */
+static void
+testfindgte(int size)
+{
+	RBTree	   *tree = create_int_rbtree();
+
+	/*
+	 * Using the size as the random key to search wouldn't allow us to get at
+	 * least one greater match, so we do size - 1
+	 */
+	int			randomKey = pg_prng_uint64_range(&pg_global_prng_state, 0, size - 1);
+	IntRBTreeNode searchNode = {.key = randomKey};
+	IntRBTreeNode *eqNode;
+	IntRBTreeNode *gtNode;
+
+	/* Insert natural numbers */
+	rbt_populate(tree, size, 1);
+
+	/*
+	 * Since the search key is included in the naturals of the tree, we're sure to find an
+	 * equal match
+	 */
+	eqNode = (IntRBTreeNode *) rbt_find_great_equal(tree, (RBTNode *) &searchNode);
+
+	if (eqNode == NULL)
+		elog(ERROR, "key was not found");
+
+	/* ensure we find an equal match */
+	if (!(eqNode->key == searchNode.key))
+		elog(ERROR, "find_great_equal operation in rbtree didn't find an equal key");
+
+	/* Delete the equal match so we can find greater matches */
+	rbt_delete(tree, (RBTNode *) eqNode);
+
+	/* Find all the rest of the naturals greater than the search key */
+	for (int i = 1; i < size - searchNode.key; i++)
+	{
+		gtNode = (IntRBTreeNode *) rbt_find_great_equal(tree, (RBTNode *) &searchNode);
+
+		/* ensure we find a greater match */
+		if (!(gtNode->key > searchNode.key))
+			elog(ERROR, "find_great_equal operation in rbtree didn't find a greater key");
+
+		/* delete the previous match to find a greater one */
+		rbt_delete(tree, (RBTNode *) gtNode);
+	}
+}
+
+/*
  * Check the correctness of the rbt_leftmost operation.
  * This operation should always return the smallest element of the tree.
  */
@@ -408,6 +459,7 @@ test_rb_tree(PG_FUNCTION_ARGS)
 	testleftright(size);
 	testrightleft(size);
 	testfind(size);
+	testfindgte(size);
 	testleftmost(size);
 	testdelete(size, Max(size / 10, 1));
 	PG_RETURN_VOID();

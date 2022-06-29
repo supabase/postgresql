@@ -162,6 +162,35 @@ rbt_find(RBTree *rbt, const RBTNode *data)
 }
 
 /*
+ * rbt_find_great_equal: search for an equal or greater value in an RBTree
+ *
+ * Returns the matching tree entry, or NULL if no match is found.
+ */
+RBTNode *
+rbt_find_great_equal(RBTree *rbt, const RBTNode *data)
+{
+	RBTNode    *node = rbt->root;
+	RBTNode    *greater = NULL;
+
+	while (node != RBTNIL)
+	{
+		int			cmp = rbt->comparator(data, node, rbt->arg);
+
+		if (cmp == 0)
+			return node;
+		else if (cmp < 0)
+		{
+			greater = node;
+			node = node->left;
+		}
+		else
+			node = node->right;
+	}
+
+	return greater;
+}
+
+/*
  * rbt_leftmost: fetch the leftmost (smallest-valued) tree node.
  * Returns NULL if tree is empty.
  *
