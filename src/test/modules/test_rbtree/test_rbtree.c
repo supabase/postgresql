@@ -300,8 +300,8 @@ testfindgte(int size)
 	rbt_populate(tree, size, 1);
 
 	/*
-	 * Since the search key is included in the naturals of the tree, we're sure to find an
-	 * equal match
+	 * Since the search key is included in the naturals of the tree, we're
+	 * sure to find an equal match
 	 */
 	eqNode = (IntRBTreeNode *) rbt_find_great_equal(tree, (RBTNode *) &searchNode);
 
@@ -315,7 +315,7 @@ testfindgte(int size)
 	/* Delete the equal match so we can find greater matches */
 	rbt_delete(tree, (RBTNode *) eqNode);
 
-	/* Find all the rest of the naturals greater than the search key */
+	/* Find the rest of the naturals greater than the search key */
 	for (int i = 1; i < size - searchNode.key; i++)
 	{
 		gtNode = (IntRBTreeNode *) rbt_find_great_equal(tree, (RBTNode *) &searchNode);
@@ -326,6 +326,57 @@ testfindgte(int size)
 
 		/* delete the previous match to find a greater one */
 		rbt_delete(tree, (RBTNode *) gtNode);
+	}
+}
+
+/*
+ * Check the correctness of the rbt_find_less_equal operation by searching for
+ * an equal key and all of the lesser keys.
+ */
+static void
+testfindlte(int size)
+{
+	RBTree	   *tree = create_int_rbtree();
+
+	/*
+	 * Using 0 as the random key to search wouldn't allow us to get at least
+	 * one lesser match, so we start from 1
+	 */
+	int			randomKey = pg_prng_uint64_range(&pg_global_prng_state, 1, size);
+	IntRBTreeNode searchNode = {.key = randomKey};
+	IntRBTreeNode *eqNode;
+	IntRBTreeNode *ltNode;
+
+	/* Insert natural numbers */
+	rbt_populate(tree, size, 1);
+
+	/*
+	 * Since the search key is included in the naturals of the tree, we're
+	 * sure to find an equal match
+	 */
+	eqNode = (IntRBTreeNode *) rbt_find_less_equal(tree, (RBTNode *) &searchNode);
+
+	if (eqNode == NULL)
+		elog(ERROR, "key was not found");
+
+	/* ensure we find an equal match */
+	if (!(eqNode->key == searchNode.key))
+		elog(ERROR, "find_less_equal operation in rbtree didn't find an equal key");
+
+	/* Delete the equal match so we can find lesser matches */
+	rbt_delete(tree, (RBTNode *) eqNode);
+
+	/* Find the rest of the naturals lesser than the search key */
+	for (int i = searchNode.key; i > 0; i--)
+	{
+		ltNode = (IntRBTreeNode *) rbt_find_less_equal(tree, (RBTNode *) &searchNode);
+
+		/* ensure we find a lesser match */
+		if (!(ltNode->key < searchNode.key))
+			elog(ERROR, "find_less_equal operation in rbtree didn't find a lesser key");
+
+		/* delete the previous match to find a lesser one */
+		rbt_delete(tree, (RBTNode *) ltNode);
 	}
 }
 
@@ -460,6 +511,7 @@ test_rb_tree(PG_FUNCTION_ARGS)
 	testrightleft(size);
 	testfind(size);
 	testfindgte(size);
+	testfindlte(size);
 	testleftmost(size);
 	testdelete(size, Max(size / 10, 1));
 	PG_RETURN_VOID();
