@@ -35,10 +35,20 @@ let
     cd src/test/modules/$1
     make check
   '';
+  docsScript = writeShellScriptBin "${prefix}-serve-docs" ''
+    set -euo pipefail
+
+    make install-docs -j16
+
+    cd ${pgBuildDir}/share/doc/html
+
+    python -mSimpleHTTPServer 5050
+  '';
 in
 mkShell {
   buildInputs = [
     readline zlib bison flex ctags ccache git bash
+    python libxml2 libxslt # for docs
     (callPackage ./nix/PerlTidy.nix {})
     (callPackage ./nix/pg_bsd_ident.nix {})
     (callPackage ./nix/pgScript.nix {inherit prefix pgBuildDir;})
@@ -46,6 +56,7 @@ mkShell {
     buildScript
     cleanScript
     testModuleScript
+    docsScript
   ];
   shellHook = ''
     export HISTFILE=.history

@@ -51,3 +51,11 @@ You can run `pgindent`(on the git changed files) and `pgperltidy` with:
 ```bash
 $ pg-style
 ```
+
+### Building and serving the docs
+
+You can build and serve the docs on port 5050 with:
+
+```bash
+$ pg-serve-docs
+```
